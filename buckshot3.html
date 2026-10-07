@@ -2,40 +2,30 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Loading...</title>
-<style>html,body{margin:0;background:#000;height:100%;}</style>
-</head>
-<body>
-<script>
-const targetURL = "https://selenite.cc/resources/semag/buckshot-roulette/index.html";
-
-// Page that lives at the blob URL: iframes the site again
-const pageHTML = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Browser</title>
+<title>File B</title>
 <style>
-html,body{margin:0;padding:0;background:#000;height:100%;overflow:hidden;}
+html,body{margin:0;background:#000;height:100%;display:flex;align-items:center;justify-content:center;}
+button{background:transparent;color:#0f0;border:1px solid rgba(0,255,0,0.4);font-family:monospace;font-size:14px;padding:12px 28px;letter-spacing:3px;cursor:pointer;}
+button:hover{background:rgba(0,255,0,0.1);border-color:#0f0;}
 iframe{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;border:none!important;z-index:3;}
 </style>
 </head>
 <body>
+<button id="load">[ LOAD ]</button>
 <script>
-const iframe = document.createElement("iframe");
-iframe.src = ${JSON.stringify(targetURL)};
-iframe.addEventListener("load", () => {
-  try { console.log("Page loaded: " + iframe.contentWindow.location.href); }
-  catch (e) { console.log("Page loaded (cross-origin)"); }
-});
-document.body.appendChild(iframe);
-<\/script>
-</body>
-</html>`;
+const targetURL = "https://selenite.cc/resources/semag/buckshot-roulette/index.html";
 
-// Immediately on load: build the blob and go to its URL
-const blobURL = URL.createObjectURL(new Blob([pageHTML], { type: "text/html" }));
-location.replace(blobURL);
+// Click -> load the site in an iframe (same launch as Data OS showURLMode)
+document.getElementById("load").addEventListener("click", () => {
+  document.getElementById("load").remove();
+  const iframe = document.createElement("iframe");
+  iframe.src = targetURL;
+  iframe.addEventListener("load", () => {
+    try { console.log("Page loaded: " + iframe.contentWindow.location.href); }
+    catch (e) { console.log("Page loaded (cross-origin)"); }
+  });
+  document.body.appendChild(iframe);
+});
 </script>
 </body>
 </html>
