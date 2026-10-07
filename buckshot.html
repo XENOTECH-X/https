@@ -4,52 +4,46 @@
 <meta charset="utf-8">
 <title>Launcher</title>
 <style>
-html,body{margin:0;background:#000;height:100%;display:flex;align-items:center;justify-content:center;}
+html,body{margin:0;background:#000;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 button{background:transparent;color:#0f0;border:1px solid rgba(0,255,0,0.4);font-family:monospace;font-size:14px;padding:12px 28px;letter-spacing:3px;cursor:pointer;}
 button:hover{background:rgba(0,255,0,0.1);border-color:#0f0;}
+#status{color:#0a0;font-family:monospace;font-size:11px;letter-spacing:2px;min-height:14px;}
 </style>
 </head>
 <body>
 <button id="launch">[ CLICK ]</button>
+<div id="status"></div>
 <script>
 const targetURL = "https://wasm.rip/files/gta3/index.html";
+const statusEl = document.getElementById("status");
 
-// Page that lives at the blob URL: a LOAD button, then the Data OS iframe launch on click
-const pageHTML = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Browser</title>
-<style>
-html,body{margin:0;padding:0;background:#000;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-button{background:transparent;color:#0f0;border:1px solid rgba(0,255,0,0.4);font-family:monospace;font-size:14px;padding:12px 28px;letter-spacing:3px;cursor:pointer;}
-button:hover{background:rgba(0,255,0,0.1);border-color:#0f0;}
-iframe{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;border:none!important;z-index:3;}
-</style>
-</head>
-<body>
-<button id="load">[ LOAD ]</button>
-<script>
-document.getElementById("load").addEventListener("click", () => {
-  document.getElementById("load").remove();
-  // Same launch as Data OS showURLMode
-  const iframe = document.createElement("iframe");
-  iframe.src = ${JSON.stringify(targetURL)};
-  iframe.addEventListener("load", () => {
-    try { console.log("Page loaded: " + iframe.contentWindow.location.href); }
-    catch (e) { console.log("Page loaded (cross-origin)"); }
-  });
-  document.body.appendChild(iframe);
-});
-<\/script>
-</body>
-</html>`;
+document.getElementById("launch").addEventListener("click", async () => {
+  // Open the tab synchronously (inside the click) so the popup blocker allows it,
+  // then point it at the blob once the fetch finishes.
+  const tab = window.open("", "_blank");
+  if (!tab) { statusEl.textContent = "POPUP BLOCKED"; return; }
+  tab.document.write('<body style="background:#000;color:#0f0;font-family:monospace;letter-spacing:2px">FETCHING...</body>');
 
-// Button click: open the blob page in a new tab
-document.getElementById("launch").addEventListener("click", () => {
-  const blob = new Blob([pageHTML], { type: "text/html" });
-  const blobURL = URL.createObjectURL(blob);
-  window.open(blobURL, "_blank");
+  try {
+    statusEl.textContent = "FETCHING...";
+    const res = await fetch(targetURL);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    let html = await res.text();
+
+    // <base> makes the page's relative scripts/assets resolve against the original site
+    const base = '<base href="' + targetURL + '">';
+    html = /<head[^>]*>/i.test(html)
+      ? html.replace(/<head[^>]*>/i, m => m + base)
+      : base + html;
+
+    // Second blob: the fetched page itself, rendered directly (no iframe)
+    const blobURL = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+    tab.location.replace(blobURL);
+    statusEl.textContent = "LOADED";
+  } catch (e) {
+    tab.close();
+    statusEl.textContent = "FETCH FAILED: " + e.message;
+  }
 });
 </script>
 </body>
