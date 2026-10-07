@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>File B</title>
+<style>
+html,body{margin:0;background:#000;height:100%;display:flex;align-items:center;justify-content:center;}
+button{background:transparent;color:#0f0;border:1px solid rgba(0,255,0,0.4);font-family:monospace;font-size:14px;padding:12px 28px;letter-spacing:3px;cursor:pointer;}
+button:hover{background:rgba(0,255,0,0.1);border-color:#0f0;}
+</style>
+</head>
+<body>
+<button id="load">[ LOAD ]</button>
+<script>
+// File C, hosted
+const FILE_C_URL = "https://xenotech-x.github.io/https/filec.html";
+
+// Page that lives at the blob URL: iframes File C (same launch as Data OS showURLMode)
+const blobPage = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Browser</title>
+<style>
+html,body{margin:0;padding:0;background:#000;height:100%;overflow:hidden;}
+iframe{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;border:none!important;z-index:3;}
+</style>
+</head>
+<body>
+<script>
+const iframe = document.createElement("iframe");
+iframe.src = ${JSON.stringify(FILE_C_URL)};
+iframe.addEventListener("load", () => {
+  try { console.log("Page loaded: " + iframe.contentWindow.location.href); }
+  catch (e) { console.log("Page loaded (cross-origin)"); }
+});
+document.body.appendChild(iframe);
+<\/script>
+</body>
+</html>`;
+
+// LOAD -> open the blob URL in a new tab
+document.getElementById("load").addEventListener("click", () => {
+  const blobURL = URL.createObjectURL(new Blob([blobPage], { type: "text/html" }));
+  window.open(blobURL, "_blank");
+});
+</script>
+</body>
+</html>
